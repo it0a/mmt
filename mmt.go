@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"path"
 )
 
 type DbConfig struct {
@@ -46,7 +47,7 @@ func main() {
 			Action: func(c *cli.Context) {
 				config := read_config()
 				if validate_connection(config.DbProfiles[0]) {
-					do_dump(config)
+					do_dump(config.DbProfiles[0], config.TableProfiles[0])
 				}
 			},
 		},
@@ -55,7 +56,10 @@ func main() {
 			ShortName: "r",
 			Usage:     "Restore tables",
 			Action: func(c *cli.Context) {
-				do_restore()
+				config := read_config()
+				if validate_connection(config.DbProfiles[0]) {
+					do_restore(config)
+				}
 			},
 		},
 		{
@@ -118,13 +122,35 @@ func get_binary() string {
 	return binary
 }
 
+func build_args(dbProfile DbProfile) []string {
+	args := []string{}
+	args = append(args, "-h", dbProfile.DbConfig.Host)
+	args = append(args, "-P", dbProfile.DbConfig.Port)
+	args = append(args, "-u", dbProfile.DbConfig.User)
+	args = append(args, "-p")
+	args = append(args, dbProfile.DbConfig.Schema)
+	return args
+}
+
+func exec_mysql(dbProfile DbProfile) error {
+	return exec.Command("mysql", build_args(dbProfile)...).Run()
+}
+
+func dump_table(dbProfile DbProfile, table Table) error {
+	out, err := os.OpenFile(path.Join("./", "dump.sql"), os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
+	if err != nil {
+		return err
+	}
+	args := build_args(dbProfile)
+	args = append(args, table.Name)
+	command := exec.Command("mysqldump", args...)
+	command.Stdout = out
+	return command.Run()
+}
+
 func validate_connection(dbProfile DbProfile) bool {
 	retVal := false
-	args := []string{}
-	args = append(args, "-u", "root")
-	args = append(args, "-p")
-	command := exec.Command("mysql", args...)
-	err := command.Run()
+	err := exec_mysql(dbProfile)
 	if err == nil {
 		retVal = true
 	} else {
@@ -133,15 +159,11 @@ func validate_connection(dbProfile DbProfile) bool {
 	return retVal
 }
 
-func do_dump(config Config) {
+func do_dump(dbProfile DbProfile, tableProfile TableProfile) {
 	println("Doing the dump...")
+	dump_table(dbProfile, tableProfile.Tables[0])
 }
 
-func do_restore() {
-	config := read_config()
-	if validate_connection(config.DbProfiles[0]) == true {
-		println("Validated!")
-	} else {
-		println("Failed to validate")
-	}
+func do_restore(config Config) {
+	println("Doing the restore...")
 }
