@@ -112,6 +112,7 @@ func get_binary() string {
 	binary, lookErr := exec.LookPath("mysql")
 	if lookErr != nil {
 		panic(lookErr)
+		os.Exit(1)
 	}
 	return binary
 }
