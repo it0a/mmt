@@ -128,12 +128,13 @@ func build_args(dbProfile DbProfile) []string {
 	args = append(args, "-P", dbProfile.DbConfig.Port)
 	args = append(args, "-u", dbProfile.DbConfig.User)
 	args = append(args, "-p")
-	args = append(args, dbProfile.DbConfig.Schema)
 	return args
 }
 
 func exec_mysql(dbProfile DbProfile) error {
-	return exec.Command("mysql", build_args(dbProfile)...).Run()
+	args := build_args(dbProfile)
+	args = append(args, dbProfile.DbConfig.Schema)
+	return exec.Command("mysql", args...).Run()
 }
 
 func dump_table(dbProfile DbProfile, table Table) error {
@@ -142,7 +143,8 @@ func dump_table(dbProfile DbProfile, table Table) error {
 		return err
 	}
 	args := build_args(dbProfile)
-	args = append(args, table.Name)
+	args = append(args, dbProfile.DbConfig.Schema, table.Name)
+	println(table.Name)
 	command := exec.Command("mysqldump", args...)
 	command.Stdout = out
 	return command.Run()
