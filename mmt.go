@@ -138,13 +138,17 @@ func exec_mysql(dbProfile DbProfile) error {
 }
 
 func dump_table(dbProfile DbProfile, table Table) error {
-	out, err := os.OpenFile(path.Join("./", "dump.sql"), os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
+	out, err := os.OpenFile(path.Join("./", table.Name+".sql"), os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
 		return err
 	}
 	args := build_args(dbProfile)
+	args = append(args, "--extended-insert=FALSE")
+	args = append(args, "--skip-comments")
 	args = append(args, dbProfile.DbConfig.Schema, table.Name)
-	println(table.Name)
+	for _, argument := range args {
+		println(argument)
+	}
 	command := exec.Command("mysqldump", args...)
 	command.Stdout = out
 	return command.Run()
@@ -163,7 +167,9 @@ func validate_connection(dbProfile DbProfile) bool {
 
 func do_dump(dbProfile DbProfile, tableProfile TableProfile) {
 	println("Doing the dump...")
-	dump_table(dbProfile, tableProfile.Tables[0])
+	for _, table := range tableProfile.Tables {
+		dump_table(dbProfile, table)
+	}
 }
 
 func do_restore(config Config) {
