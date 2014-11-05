@@ -1,6 +1,7 @@
 package main
 
 import (
+	"code.google.com/p/gopass"
 	"encoding/json"
 	"github.com/codegangsta/cli"
 	"io/ioutil"
@@ -10,10 +11,11 @@ import (
 )
 
 type DbConfig struct {
-	Host   string `json:"host"`
-	Port   string `json:"port"`
-	User   string `json:"user"`
-	Schema string `json:"schema"`
+	Host     string `json:"host"`
+	Port     string `json:"port"`
+	User     string `json:"user"`
+	Schema   string `json:"schema"`
+	Password string
 }
 
 type Table struct {
@@ -46,8 +48,14 @@ func main() {
 			Usage:     "Dump tables",
 			Action: func(c *cli.Context) {
 				config := read_config()
-				if validate_connection(config.DbProfiles[0]) {
-					do_dump(config.DbProfiles[0], config.TableProfiles[0])
+				dbProfile := config.DbProfiles[0]
+				password, err := gopass.GetPass("Enter password: ")
+				if err != nil {
+					panic(err)
+				}
+				dbProfile.DbConfig.Password = password
+				if validate_connection(dbProfile) {
+					do_dump(dbProfile, config.TableProfiles[0])
 				}
 			},
 		},
@@ -127,7 +135,7 @@ func build_args(dbProfile DbProfile) []string {
 	args = append(args, "-h", dbProfile.DbConfig.Host)
 	args = append(args, "-P", dbProfile.DbConfig.Port)
 	args = append(args, "-u", dbProfile.DbConfig.User)
-	args = append(args, "-p")
+	args = append(args, "-p"+dbProfile.DbConfig.Password)
 	return args
 }
 
@@ -146,9 +154,6 @@ func dump_table(dbProfile DbProfile, table Table) error {
 	args = append(args, "--extended-insert=FALSE")
 	args = append(args, "--skip-comments")
 	args = append(args, dbProfile.DbConfig.Schema, table.Name)
-	for _, argument := range args {
-		println(argument)
-	}
 	command := exec.Command("mysqldump", args...)
 	command.Stdout = out
 	return command.Run()
@@ -166,9 +171,12 @@ func validate_connection(dbProfile DbProfile) bool {
 }
 
 func do_dump(dbProfile DbProfile, tableProfile TableProfile) {
-	println("Doing the dump...")
 	for _, table := range tableProfile.Tables {
-		dump_table(dbProfile, table)
+		println("Dumping " + table.Name + "...")
+		err := dump_table(dbProfile, table)
+		if err != nil {
+			panic(err)
+		}
 	}
 }
 
