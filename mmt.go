@@ -89,7 +89,6 @@ func print_info() {
 		}
 		println("")
 	}
-
 }
 
 func read_config() Config {
@@ -117,16 +116,36 @@ func get_binary() string {
 	return binary
 }
 
-func do_dump() {
-	args := []string{"mysql", "-u", "root", "-p"}
-	env := os.Environ()
-	execErr := syscall.Exec(get_binary(), args, env)
-	if execErr != nil {
-		panic(execErr)
-		os.Exit(1)
+func validate_connection(dbconfig DbConfig) bool {
+	retVal := false
+	args := []string{}
+	args = append(args, "-u", "root")
+	args = append(args, "-p")
+	command := exec.Command("mysql", args...)
+	err := command.Run()
+	if err == nil {
+		retVal = true
 	}
+	return retVal
+}
+
+func do_dump() {
+	args := []string{}
+	args = append(args, "-u", "root")
+	args = append(args, "-p")
+	command := exec.Command("mysql", args...)
+	err := command.Run()
+	if err != nil {
+		panic(err)
+	}
+	println("OK!")
 }
 
 func do_restore() {
-	println("TODO")
+	config := read_config()
+	if validate_connection(config.DbProfiles[0].DbConfig) == true {
+		println("Validated!")
+	} else {
+		println("Failed to validate")
+	}
 }
