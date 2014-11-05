@@ -48,14 +48,17 @@ func main() {
 			Usage:     "Dump tables",
 			Action: func(c *cli.Context) {
 				config := read_config()
+				// TODO: Add selection from menu if the db/table profile is left unspecified
 				dbProfile := config.DbProfiles[0]
+				tableProfile := config.TableProfiles[0]
+				//
 				password, err := gopass.GetPass("Enter password: ")
 				if err != nil {
 					panic(err)
 				}
 				dbProfile.DbConfig.Password = password
 				if validate_connection(dbProfile) {
-					do_dump(dbProfile, config.TableProfiles[0])
+					do_dump(dbProfile, tableProfile)
 				}
 			},
 		},
