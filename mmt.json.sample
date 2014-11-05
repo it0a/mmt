@@ -1,14 +1,26 @@
 {
-    "dbconfig": {
-        "host": "127.0.0.1",
-        "port": "3306",
-        "user": "root",
-        "pass": "pass",
-        "schema": "schema_name"
-    },
-    "tables": [
+    "dbProfiles": [
         {
-            "name":"table_name"
+            "name": "local",
+            "dbConfig": {
+                "host": "localhost",
+                "port": "3306",
+                "user": "root",
+                "schema": "my_table"
+            }
+        }
+    ],
+    "tableProfiles": [
+        {
+            "name": "default",
+            "tables": [
+                {
+                    "name": "table_one"
+                },
+                {
+                    "name": "table_two"
+                }
+            ]
         }
     ]
 }
