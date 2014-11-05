@@ -110,7 +110,7 @@ func print_info() {
 }
 
 func read_config() Config {
-	file, readErr := ioutil.ReadFile("./mmt.json")
+	file, readErr := ioutil.ReadFile("~/.mmt.json")
 	if readErr != nil {
 		panic(readErr)
 		os.Exit(1)
