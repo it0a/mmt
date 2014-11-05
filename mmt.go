@@ -24,6 +24,7 @@ type Table struct {
 
 type TableProfile struct {
 	Name   string  `json:"name"`
+    DumpDir string `json:"dumpDir"`
 	Tables []Table `json:"tables"`
 }
 
@@ -148,8 +149,8 @@ func exec_mysql(dbProfile DbProfile) error {
 	return exec.Command("mysql", args...).Run()
 }
 
-func dump_table(dbProfile DbProfile, table Table) error {
-	out, err := os.OpenFile(path.Join("./", table.Name+".sql"), os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
+func dump_table(dbProfile DbProfile, dumpDir string, table Table) error {
+	out, err := os.OpenFile(path.Join( dumpDir, table.Name+".sql"), os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
 		return err
 	}
@@ -176,7 +177,7 @@ func validate_connection(dbProfile DbProfile) bool {
 func do_dump(dbProfile DbProfile, tableProfile TableProfile) {
 	for _, table := range tableProfile.Tables {
 		println("Dumping " + table.Name + "...")
-		err := dump_table(dbProfile, table)
+		err := dump_table(dbProfile, tableProfile.DumpDir, table)
 		if err != nil {
 			panic(err)
 		}

@@ -13,6 +13,7 @@
     "tableProfiles": [
         {
             "name": "default",
+            "dumpDir": "/home/user/dumpDir",
             "tables": [
                 {
                     "name": "table_one"
