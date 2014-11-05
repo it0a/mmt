@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
-	"syscall"
 )
 
 type DbConfig struct {
@@ -45,7 +44,10 @@ func main() {
 			ShortName: "d",
 			Usage:     "Dump tables",
 			Action: func(c *cli.Context) {
-				do_dump()
+				config := read_config()
+				if validate_connection(config.DbProfiles[0]) {
+					do_dump(config)
+				}
 			},
 		},
 		{
@@ -116,7 +118,7 @@ func get_binary() string {
 	return binary
 }
 
-func validate_connection(dbconfig DbConfig) bool {
+func validate_connection(dbProfile DbProfile) bool {
 	retVal := false
 	args := []string{}
 	args = append(args, "-u", "root")
@@ -125,25 +127,19 @@ func validate_connection(dbconfig DbConfig) bool {
 	err := command.Run()
 	if err == nil {
 		retVal = true
+	} else {
+		println("Failed to validate connection for database profile " + dbProfile.Name)
 	}
 	return retVal
 }
 
-func do_dump() {
-	args := []string{}
-	args = append(args, "-u", "root")
-	args = append(args, "-p")
-	command := exec.Command("mysql", args...)
-	err := command.Run()
-	if err != nil {
-		panic(err)
-	}
-	println("OK!")
+func do_dump(config Config) {
+	println("Doing the dump...")
 }
 
 func do_restore() {
 	config := read_config()
-	if validate_connection(config.DbProfiles[0].DbConfig) == true {
+	if validate_connection(config.DbProfiles[0]) == true {
 		println("Validated!")
 	} else {
 		println("Failed to validate")
