@@ -59,9 +59,9 @@ func main() {
 		{
 			Name:      "info",
 			ShortName: "i",
-			Usage:     "Show current configuration information",
+			Usage:     "Prints the current configuration information",
 			Action: func(c *cli.Context) {
-				do_info()
+				print_info()
 			},
 		},
 	}
@@ -71,8 +71,8 @@ func main() {
 	app.Run(os.Args)
 }
 
-func do_info() {
-	Config := ReadConfig()
+func print_info() {
+	Config := read_config()
 	for _, dbProfile := range Config.DbProfiles {
 		println("Database Profile Name: " + dbProfile.Name)
 		println("Host: " + dbProfile.DbConfig.Host)
@@ -92,7 +92,7 @@ func do_info() {
 
 }
 
-func ReadConfig() Config {
+func read_config() Config {
 	file, readErr := ioutil.ReadFile("./mmt.json")
 	if readErr != nil {
 		panic(readErr)
