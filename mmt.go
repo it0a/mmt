@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"os/user"
 	"path"
 )
 
@@ -110,7 +111,12 @@ func print_info() {
 }
 
 func read_config() Config {
-	file, readErr := ioutil.ReadFile("~/.mmt.json")
+
+    usr, err := user.Current()
+    if err != nil {
+        panic(err)
+    }
+	file, readErr := ioutil.ReadFile(usr.HomeDir + "/.mmt.json")
 	if readErr != nil {
 		panic(readErr)
 		os.Exit(1)
