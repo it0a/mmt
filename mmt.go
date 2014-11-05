@@ -35,17 +35,19 @@ func main() {
 	app.Run(os.Args)
 }
 
-func do_dump() {
+func get_mysql() string {
 	//Check that the mysql binary exists on this machine
 	binary, lookErr := exec.LookPath("mysql")
 	if lookErr != nil {
 		panic(lookErr)
 	}
+	return binary
+}
 
+func do_dump() {
 	args := []string{"mysql", "-u", "root", "-p"}
 	env := os.Environ()
-
-	execErr := syscall.Exec(binary, args, env)
+	execErr := syscall.Exec(get_mysql(), args, env)
 	if execErr != nil {
 		panic(execErr)
 	}
