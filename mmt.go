@@ -1,11 +1,31 @@
 package main
 
 import (
+	"encoding/json"
+	"fmt"
 	"github.com/codegangsta/cli"
+	"io/ioutil"
 	"os"
 	"os/exec"
 	"syscall"
 )
+
+type DbConfig struct {
+	host   string
+	port   string
+	user   string
+	pass   string
+	schema string
+}
+
+type Table struct {
+	name string
+}
+
+type Config struct {
+	dbconfig DbConfig
+	tables   []Table
+}
 
 func main() {
 	app := cli.NewApp()
@@ -28,6 +48,14 @@ func main() {
 				do_restore()
 			},
 		},
+		{
+			Name:      "info",
+			ShortName: "i",
+			Usage:     "Show current configuration information",
+			Action: func(c *cli.Context) {
+				do_info()
+			},
+		},
 	}
 	app.Action = func(c *cli.Context) {
 		println("TODO")
@@ -35,7 +63,26 @@ func main() {
 	app.Run(os.Args)
 }
 
-func get_mysql() string {
+func do_info() {
+	config := ReadConfig()
+	println("Host: " + config.dbconfig.host)
+}
+
+func ReadConfig() Config {
+	file, readErr := ioutil.ReadFile("mmt.config")
+	if readErr != nil {
+		panic(readErr)
+	}
+	var config Config
+	parseErr := json.Unmarshal([]byte(file), &config)
+	if parseErr != nil {
+		panic(parseErr)
+	}
+	fmt.Printf("%#v\n", config)
+	return config
+}
+
+func get_binary() string {
 	//Check that the mysql binary exists on this machine
 	binary, lookErr := exec.LookPath("mysql")
 	if lookErr != nil {
@@ -47,7 +94,7 @@ func get_mysql() string {
 func do_dump() {
 	args := []string{"mysql", "-u", "root", "-p"}
 	env := os.Environ()
-	execErr := syscall.Exec(get_mysql(), args, env)
+	execErr := syscall.Exec(get_binary(), args, env)
 	if execErr != nil {
 		panic(execErr)
 	}
