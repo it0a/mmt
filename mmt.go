@@ -3,6 +3,7 @@ package main
 import (
 	"code.google.com/p/gopass"
 	"encoding/json"
+	"fmt"
 	"github.com/codegangsta/cli"
 	"io/ioutil"
 	"os"
@@ -200,6 +201,20 @@ func do_dump(dbProfile DbProfile, tableProfile TableProfile) {
 
 func restore_table(dbProfile DbProfile, dumpDir string, table Table) {
 	println("Restoring " + table.Name + "...")
+	in, err := os.Open(dumpDir + "/" + table.Name + ".sql")
+	if err != nil {
+		fmt.Println(err)
+		panic(err)
+	}
+	args := build_args(dbProfile)
+	args = append(args, dbProfile.DbConfig.Schema)
+	command := exec.Command("mysql", args...)
+	command.Stdin = in
+	execErr := command.Run()
+	if execErr != nil {
+		fmt.Println(execErr)
+		panic(execErr)
+	}
 }
 
 func do_restore(dbProfile DbProfile, tableProfile TableProfile) {
