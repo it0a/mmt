@@ -229,11 +229,9 @@ func detect_diff(dumpDir string, table Table) {
 	args = append(args, "--work-tree", dumpDir)
 	args = append(args, "diff", "--quiet", dumpDir+"/"+table.Name+".sql")
 	//args = append(args, "diff", dumpDir+"/"+table.Name+".sql")
-	fmt.Println(args)
 	command := exec.Command("git", args...)
 	err := command.Run()
 	if err != nil {
-		fmt.Println(err)
-		fmt.Println("Diff detected")
+		fmt.Println("Diff detected!")
 	}
 }
