@@ -225,10 +225,13 @@ func do_restore(dbProfile DbProfile, tableProfile TableProfile) {
 
 func detect_diff(dumpDir string, table Table) {
 	args := []string{}
-	args = append(args, "diff", "--quiet", dumpDir+"/"+table.Name)
+	args = append(args, "--git-dir='"+dumpDir+"'", "--work-tree='"+dumpDir+"'")
+	args = append(args, "diff", "--quiet", table.Name+".sql")
+	fmt.Println(args)
 	command := exec.Command("git", args...)
 	err := command.Run()
 	if err != nil {
+		fmt.Println(err)
 		fmt.Println("Diff detected")
 	}
 }
