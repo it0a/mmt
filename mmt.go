@@ -221,3 +221,11 @@ func do_restore(dbProfile DbProfile, tableProfile TableProfile) {
 		restore_table(dbProfile, tableProfile.DumpDir, table)
 	}
 }
+
+func detect_diff(dumpDir string, table Table) bool {
+	args := []string{}
+	args = append(args, "diff", "--quiet", dumpDir+"/"+table.Name)
+	command := exec.Command("git", args...)
+	err := command.Run()
+	return err != nil
+}
