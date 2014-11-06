@@ -83,6 +83,51 @@ func main() {
 	app.Run(os.Args)
 }
 
+func read_config() Config {
+	usr, err := user.Current()
+	if err != nil {
+		panic(err)
+	}
+	file, readErr := ioutil.ReadFile(usr.HomeDir + "/.mmt.json")
+	if readErr != nil {
+		panic(readErr)
+	}
+	var config Config
+	parseErr := json.Unmarshal(file, &config)
+	if parseErr != nil {
+		fmt.Println("Error parsing .mmt.json")
+		fmt.Println(parseErr)
+		os.Exit(1)
+	}
+	return config
+}
+
+func build_args(dbProfile DbProfile) []string {
+	args := []string{}
+	args = append(args, "-h", dbProfile.DbConfig.Host)
+	args = append(args, "-P", dbProfile.DbConfig.Port)
+	args = append(args, "-u", dbProfile.DbConfig.User)
+	args = append(args, "-p"+dbProfile.DbConfig.Password)
+	return args
+}
+
+func exec_mysql(dbProfile DbProfile) error {
+	args := build_args(dbProfile)
+	args = append(args, dbProfile.DbConfig.Schema)
+	return exec.Command("mysql", args...).Run()
+}
+
+func validate_connection(dbProfile DbProfile) bool {
+	retVal := false
+	err := exec_mysql(dbProfile)
+	if err == nil {
+		retVal = true
+	} else {
+		println("Failed to validate connection for database profile " + dbProfile.Name)
+	}
+	return retVal
+}
+
 func initialize() (DbProfile, TableProfile) {
 	config := read_config()
 	dbProfile := config.DbProfiles[0]
@@ -129,40 +174,6 @@ func print_info() {
 	}
 }
 
-func read_config() Config {
-	usr, err := user.Current()
-	if err != nil {
-		panic(err)
-	}
-	file, readErr := ioutil.ReadFile(usr.HomeDir + "/.mmt.json")
-	if readErr != nil {
-		panic(readErr)
-	}
-	var config Config
-	parseErr := json.Unmarshal(file, &config)
-	if parseErr != nil {
-		fmt.Println("Error parsing .mmt.json")
-		fmt.Println(parseErr)
-		os.Exit(1)
-	}
-	return config
-}
-
-func build_args(dbProfile DbProfile) []string {
-	args := []string{}
-	args = append(args, "-h", dbProfile.DbConfig.Host)
-	args = append(args, "-P", dbProfile.DbConfig.Port)
-	args = append(args, "-u", dbProfile.DbConfig.User)
-	args = append(args, "-p"+dbProfile.DbConfig.Password)
-	return args
-}
-
-func exec_mysql(dbProfile DbProfile) error {
-	args := build_args(dbProfile)
-	args = append(args, dbProfile.DbConfig.Schema)
-	return exec.Command("mysql", args...).Run()
-}
-
 func dump_table(dbProfile DbProfile, dumpDir string, table Table) {
 	println("Dumping " + table.Name + "...")
 	out, err := os.OpenFile(path.Join(dumpDir, table.Name+".sql"), os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
@@ -182,17 +193,6 @@ func dump_table(dbProfile DbProfile, dumpDir string, table Table) {
 		os.Exit(1)
 	}
 	detect_diff(dumpDir, table)
-}
-
-func validate_connection(dbProfile DbProfile) bool {
-	retVal := false
-	err := exec_mysql(dbProfile)
-	if err == nil {
-		retVal = true
-	} else {
-		println("Failed to validate connection for database profile " + dbProfile.Name)
-	}
-	return retVal
 }
 
 func do_dump(dbProfile DbProfile, tableProfile TableProfile) {
