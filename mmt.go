@@ -179,6 +179,7 @@ func dump_table(dbProfile DbProfile, dumpDir string, table Table) {
 		fmt.Println(commandErr)
 		os.Exit(1)
 	}
+	detect_diff(dumpDir, table)
 }
 
 func validate_connection(dbProfile DbProfile) bool {
@@ -222,10 +223,12 @@ func do_restore(dbProfile DbProfile, tableProfile TableProfile) {
 	}
 }
 
-func detect_diff(dumpDir string, table Table) bool {
+func detect_diff(dumpDir string, table Table) {
 	args := []string{}
 	args = append(args, "diff", "--quiet", dumpDir+"/"+table.Name)
 	command := exec.Command("git", args...)
 	err := command.Run()
-	return err != nil
+	if err != nil {
+		fmt.Println("Diff detected")
+	}
 }
