@@ -45,6 +45,7 @@ func main() {
 	app := cli.NewApp()
 	app.Name = "mmt"
 	app.Usage = "metadata management tool"
+	app.Version = "0.1"
 	app.Commands = []cli.Command{
 		{
 			Name:      "dump",
