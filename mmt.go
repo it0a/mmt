@@ -117,6 +117,18 @@ func exec_mysql(dbProfile DbProfile) error {
 	return exec.Command("mysql", args...).Run()
 }
 
+func detect_diff(dumpDir string, table Table) {
+	args := []string{}
+	args = append(args, "--git-dir", dumpDir+"/.git")
+	args = append(args, "--work-tree", dumpDir)
+	args = append(args, "diff", "--quiet", dumpDir+"/"+table.Name+".sql")
+	command := exec.Command("git", args...)
+	err := command.Run()
+	if err != nil {
+		fmt.Println("Diff detected!")
+	}
+}
+
 func validate_connection(dbProfile DbProfile) bool {
 	retVal := false
 	err := exec_mysql(dbProfile)
@@ -222,17 +234,5 @@ func restore_table(dbProfile DbProfile, dumpDir string, table Table) {
 func do_restore(dbProfile DbProfile, tableProfile TableProfile) {
 	for _, table := range tableProfile.Tables {
 		restore_table(dbProfile, tableProfile.DumpDir, table)
-	}
-}
-
-func detect_diff(dumpDir string, table Table) {
-	args := []string{}
-	args = append(args, "--git-dir", dumpDir+"/.git")
-	args = append(args, "--work-tree", dumpDir)
-	args = append(args, "diff", "--quiet", dumpDir+"/"+table.Name+".sql")
-	command := exec.Command("git", args...)
-	err := command.Run()
-	if err != nil {
-		fmt.Println("Diff detected!")
 	}
 }
