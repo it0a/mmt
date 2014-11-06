@@ -97,23 +97,35 @@ func initialize() (DbProfile, TableProfile) {
 	return dbProfile, tableProfile
 }
 
+func print_dbProfile(dbProfile DbProfile) {
+	println("Database Profile Name: " + dbProfile.Name)
+	println("Host: " + dbProfile.DbConfig.Host)
+	println("Port: " + dbProfile.DbConfig.Port)
+	println("User: " + dbProfile.DbConfig.User)
+	println("Schema: " + dbProfile.DbConfig.Schema)
+	println("")
+}
+
+func print_tableProfile(tableProfile TableProfile) {
+	println("Table Profile Name: " + tableProfile.Name)
+	println("Tables: ")
+	for _, table := range tableProfile.Tables {
+		print_table(table)
+	}
+	println("")
+}
+
+func print_table(table Table) {
+	println(table.Name)
+}
+
 func print_info() {
 	Config := read_config()
 	for _, dbProfile := range Config.DbProfiles {
-		println("Database Profile Name: " + dbProfile.Name)
-		println("Host: " + dbProfile.DbConfig.Host)
-		println("Port: " + dbProfile.DbConfig.Port)
-		println("User: " + dbProfile.DbConfig.User)
-		println("Schema: " + dbProfile.DbConfig.Schema)
-		println("")
+		print_dbProfile(dbProfile)
 	}
 	for _, tableProfile := range Config.TableProfiles {
-		println("Table Profile Name: " + tableProfile.Name)
-		println("Tables: ")
-		for _, table := range tableProfile.Tables {
-			println(table.Name)
-		}
-		println("")
+		print_tableProfile(tableProfile)
 	}
 }
 
