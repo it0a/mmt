@@ -148,15 +148,6 @@ func read_config() Config {
 	return config
 }
 
-func get_binary() string {
-	binary, lookErr := exec.LookPath("mysql")
-	if lookErr != nil {
-		fmt.Println(lookErr)
-		os.Exit(1)
-	}
-	return binary
-}
-
 func build_args(dbProfile DbProfile) []string {
 	args := []string{}
 	args = append(args, "-h", dbProfile.DbConfig.Host)
