@@ -78,7 +78,7 @@ func main() {
 		},
 	}
 	app.Action = func(c *cli.Context) {
-		println("TODO")
+		fmt.Println("TODO")
 	}
 	app.Run(os.Args)
 }
@@ -135,7 +135,7 @@ func validate_connection(dbProfile DbProfile) bool {
 	if err == nil {
 		retVal = true
 	} else {
-		println("Failed to validate connection for database profile " + dbProfile.Name)
+		fmt.Println("Failed to validate connection for database profile " + dbProfile.Name)
 	}
 	return retVal
 }
@@ -155,25 +155,25 @@ func initialize() (DbProfile, TableProfile) {
 }
 
 func print_dbProfile(dbProfile DbProfile) {
-	println("Database Profile Name: " + dbProfile.Name)
-	println("Host: " + dbProfile.DbConfig.Host)
-	println("Port: " + dbProfile.DbConfig.Port)
-	println("User: " + dbProfile.DbConfig.User)
-	println("Schema: " + dbProfile.DbConfig.Schema)
-	println("")
+	fmt.Println("Database Profile Name: " + dbProfile.Name)
+	fmt.Println("Host: " + dbProfile.DbConfig.Host)
+	fmt.Println("Port: " + dbProfile.DbConfig.Port)
+	fmt.Println("User: " + dbProfile.DbConfig.User)
+	fmt.Println("Schema: " + dbProfile.DbConfig.Schema)
+	fmt.Println("")
 }
 
 func print_tableProfile(tableProfile TableProfile) {
-	println("Table Profile Name: " + tableProfile.Name)
-	println("Tables: ")
+	fmt.Println("Table Profile Name: " + tableProfile.Name)
+	fmt.Println("Tables: ")
 	for _, table := range tableProfile.Tables {
 		print_table(table)
 	}
-	println("")
+	fmt.Println("")
 }
 
 func print_table(table Table) {
-	println(table.Name)
+	fmt.Println(table.Name)
 }
 
 func print_info() {
@@ -187,7 +187,7 @@ func print_info() {
 }
 
 func dump_table(dbProfile DbProfile, dumpDir string, table Table) {
-	println("Dumping " + table.Name + "...")
+	fmt.Println("Dumping " + table.Name + "...")
 	out, err := os.OpenFile(path.Join(dumpDir, table.Name+".sql"), os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
 		fmt.Println(err)
@@ -214,7 +214,7 @@ func do_dump(dbProfile DbProfile, tableProfile TableProfile) {
 }
 
 func restore_table(dbProfile DbProfile, dumpDir string, table Table) {
-	println("Restoring " + table.Name + "...")
+	fmt.Println("Restoring " + table.Name + "...")
 	in, err := os.Open(dumpDir + "/" + table.Name + ".sql")
 	if err != nil {
 		fmt.Println(err)
