@@ -132,17 +132,16 @@ func print_info() {
 func read_config() Config {
 	usr, err := user.Current()
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		panic(err)
 	}
 	file, readErr := ioutil.ReadFile(usr.HomeDir + "/.mmt.json")
 	if readErr != nil {
-		fmt.Println(readErr)
-		os.Exit(1)
+		panic(readErr)
 	}
 	var config Config
 	parseErr := json.Unmarshal(file, &config)
 	if parseErr != nil {
+		fmt.Println("Error parsing .mmt.json")
 		fmt.Println(parseErr)
 		os.Exit(1)
 	}
