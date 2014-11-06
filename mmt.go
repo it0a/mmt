@@ -33,6 +33,7 @@ type TableProfile struct {
 type DbProfile struct {
 	Name     string   `json:"name"`
 	DbConfig DbConfig `json:"dbConfig"`
+	Valid    bool
 }
 
 type Config struct {
@@ -50,17 +51,8 @@ func main() {
 			ShortName: "d",
 			Usage:     "Dump tables",
 			Action: func(c *cli.Context) {
-				config := read_config()
-				// TODO: Add selection from menu if the db/table profile is left unspecified
-				dbProfile := config.DbProfiles[0]
-				tableProfile := config.TableProfiles[0]
-				//
-				password, err := gopass.GetPass("Enter password: ")
-				if err != nil {
-					panic(err)
-				}
-				dbProfile.DbConfig.Password = password
-				if validate_connection(dbProfile) {
+				dbProfile, tableProfile := initialize()
+				if dbProfile.Valid {
 					do_dump(dbProfile, tableProfile)
 				}
 			},
@@ -70,16 +62,8 @@ func main() {
 			ShortName: "r",
 			Usage:     "Restore tables",
 			Action: func(c *cli.Context) {
-				config := read_config()
-				// TODO: Add selection from menu if the db/table profile is left unspecified
-				dbProfile := config.DbProfiles[0]
-				tableProfile := config.TableProfiles[0]
-				password, err := gopass.GetPass("Enter password: ")
-				if err != nil {
-					panic(err)
-				}
-				dbProfile.DbConfig.Password = password
-				if validate_connection(dbProfile) {
+				dbProfile, tableProfile := initialize()
+				if dbProfile.Valid {
 					do_restore(dbProfile, tableProfile)
 				}
 			},
@@ -97,6 +81,20 @@ func main() {
 		println("TODO")
 	}
 	app.Run(os.Args)
+}
+
+func initialize() (DbProfile, TableProfile) {
+	config := read_config()
+	dbProfile := config.DbProfiles[0]
+	tableProfile := config.TableProfiles[0]
+	password, err := gopass.GetPass("Enter password: ")
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	dbProfile.DbConfig.Password = password
+	dbProfile.Valid = validate_connection(dbProfile)
+	return dbProfile, tableProfile
 }
 
 func print_info() {
@@ -120,30 +118,29 @@ func print_info() {
 }
 
 func read_config() Config {
-
 	usr, err := user.Current()
 	if err != nil {
-		panic(err)
+		fmt.Println(err)
+		os.Exit(1)
 	}
 	file, readErr := ioutil.ReadFile(usr.HomeDir + "/.mmt.json")
 	if readErr != nil {
-		panic(readErr)
+		fmt.Println(readErr)
 		os.Exit(1)
 	}
 	var config Config
 	parseErr := json.Unmarshal(file, &config)
 	if parseErr != nil {
-		panic(parseErr)
+		fmt.Println(parseErr)
 		os.Exit(1)
 	}
 	return config
 }
 
 func get_binary() string {
-	//Check that the mysql binary exists on this machine
 	binary, lookErr := exec.LookPath("mysql")
 	if lookErr != nil {
-		panic(lookErr)
+		fmt.Println(lookErr)
 		os.Exit(1)
 	}
 	return binary
@@ -168,7 +165,8 @@ func dump_table(dbProfile DbProfile, dumpDir string, table Table) {
 	println("Dumping " + table.Name + "...")
 	out, err := os.OpenFile(path.Join(dumpDir, table.Name+".sql"), os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
-		panic(err)
+		fmt.Println(err)
+		os.Exit(1)
 	}
 	args := build_args(dbProfile)
 	args = append(args, "--extended-insert=FALSE")
@@ -178,7 +176,8 @@ func dump_table(dbProfile DbProfile, dumpDir string, table Table) {
 	command.Stdout = out
 	commandErr := command.Run()
 	if commandErr != nil {
-		panic(commandErr)
+		fmt.Println(commandErr)
+		os.Exit(1)
 	}
 }
 
@@ -204,7 +203,7 @@ func restore_table(dbProfile DbProfile, dumpDir string, table Table) {
 	in, err := os.Open(dumpDir + "/" + table.Name + ".sql")
 	if err != nil {
 		fmt.Println(err)
-		panic(err)
+		os.Exit(1)
 	}
 	args := build_args(dbProfile)
 	args = append(args, dbProfile.DbConfig.Schema)
@@ -213,7 +212,7 @@ func restore_table(dbProfile DbProfile, dumpDir string, table Table) {
 	execErr := command.Run()
 	if execErr != nil {
 		fmt.Println(execErr)
-		panic(execErr)
+		os.Exit(1)
 	}
 }
 
