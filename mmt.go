@@ -125,7 +125,7 @@ func detect_diff(dumpDir string, table Table) {
 	command := exec.Command("git", args...)
 	err := command.Run()
 	if err != nil {
-		fmt.Println("Diff detected!")
+		fmt.Printf("\rDiff detected in %s", table.Name)
 	}
 }
 
