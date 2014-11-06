@@ -24,9 +24,9 @@ type Table struct {
 }
 
 type TableProfile struct {
-	Name   string  `json:"name"`
-    DumpDir string `json:"dumpDir"`
-	Tables []Table `json:"tables"`
+	Name    string  `json:"name"`
+	DumpDir string  `json:"dumpDir"`
+	Tables  []Table `json:"tables"`
 }
 
 type DbProfile struct {
@@ -70,8 +70,16 @@ func main() {
 			Usage:     "Restore tables",
 			Action: func(c *cli.Context) {
 				config := read_config()
-				if validate_connection(config.DbProfiles[0]) {
-					do_restore(config)
+				// TODO: Add selection from menu if the db/table profile is left unspecified
+				dbProfile := config.DbProfiles[0]
+				tableProfile := config.TableProfiles[0]
+				password, err := gopass.GetPass("Enter password: ")
+				if err != nil {
+					panic(err)
+				}
+				dbProfile.DbConfig.Password = password
+				if validate_connection(dbProfile) {
+					do_restore(dbProfile, tableProfile)
 				}
 			},
 		},
@@ -112,10 +120,10 @@ func print_info() {
 
 func read_config() Config {
 
-    usr, err := user.Current()
-    if err != nil {
-        panic(err)
-    }
+	usr, err := user.Current()
+	if err != nil {
+		panic(err)
+	}
 	file, readErr := ioutil.ReadFile(usr.HomeDir + "/.mmt.json")
 	if readErr != nil {
 		panic(readErr)
@@ -155,10 +163,11 @@ func exec_mysql(dbProfile DbProfile) error {
 	return exec.Command("mysql", args...).Run()
 }
 
-func dump_table(dbProfile DbProfile, dumpDir string, table Table) error {
-	out, err := os.OpenFile(path.Join( dumpDir, table.Name+".sql"), os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
+func dump_table(dbProfile DbProfile, dumpDir string, table Table) {
+	println("Dumping " + table.Name + "...")
+	out, err := os.OpenFile(path.Join(dumpDir, table.Name+".sql"), os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
-		return err
+		panic(err)
 	}
 	args := build_args(dbProfile)
 	args = append(args, "--extended-insert=FALSE")
@@ -166,7 +175,10 @@ func dump_table(dbProfile DbProfile, dumpDir string, table Table) error {
 	args = append(args, dbProfile.DbConfig.Schema, table.Name)
 	command := exec.Command("mysqldump", args...)
 	command.Stdout = out
-	return command.Run()
+	commandErr := command.Run()
+	if commandErr != nil {
+		panic(commandErr)
+	}
 }
 
 func validate_connection(dbProfile DbProfile) bool {
@@ -182,14 +194,16 @@ func validate_connection(dbProfile DbProfile) bool {
 
 func do_dump(dbProfile DbProfile, tableProfile TableProfile) {
 	for _, table := range tableProfile.Tables {
-		println("Dumping " + table.Name + "...")
-		err := dump_table(dbProfile, tableProfile.DumpDir, table)
-		if err != nil {
-			panic(err)
-		}
+		dump_table(dbProfile, tableProfile.DumpDir, table)
 	}
 }
 
-func do_restore(config Config) {
-	println("Doing the restore...")
+func restore_table(dbProfile DbProfile, dumpDir string, table Table) {
+	println("Restoring " + table.Name + "...")
+}
+
+func do_restore(dbProfile DbProfile, tableProfile TableProfile) {
+	for _, table := range tableProfile.Tables {
+		restore_table(dbProfile, tableProfile.DumpDir, table)
+	}
 }
