@@ -187,6 +187,10 @@ func print_info() {
 	}
 }
 
+func stash_data() {
+    println("TODO")
+}
+
 func dump_table(dbProfile DbProfile, dumpDir string, table Table) {
 	fmt.Println("Dumping " + table.Name + "...")
 	out, err := os.OpenFile(path.Join(dumpDir, table.Name+".sql"), os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
