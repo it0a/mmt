@@ -191,6 +191,7 @@ func dump_table(dbProfile DbProfile, dumpDir string, table Table) {
 	fmt.Println("Dumping " + table.Name + "...")
 	out, err := os.OpenFile(path.Join(dumpDir, table.Name+".sql"), os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
+        fmt.Println("Failed opening...")
 		fmt.Println(err)
 		os.Exit(1)
 	}
